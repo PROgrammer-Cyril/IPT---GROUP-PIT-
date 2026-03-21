@@ -87,7 +87,8 @@ const OrderCard: React.FC<Props> = ({ order }) => {
                     {order.total_price && (
                         <div className="flex items-center justify-between text-white font-bold mt-2">
                             <span>Total Price:</span>
-                            <span className="text-emerald-400">₱{order.total_price.toFixed(2)}</span>
+                            {/* ADDED Number() HERE: */}
+                            <span className="text-emerald-400">₱{Number(order.total_price).toFixed(2)}</span>
                         </div>
                     )}
                 </div>

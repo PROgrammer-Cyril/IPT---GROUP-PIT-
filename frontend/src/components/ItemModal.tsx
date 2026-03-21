@@ -31,14 +31,25 @@ const ItemModal: React.FC<Props> = ({ item, isOpen, onClose, onAdd }) => {
     if (!isOpen || !item) return null;
 
     const imageUrls: Record<number, string> = {
-        1: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop',
-        2: 'https://images.unsplash.com/photo-1608219994488-cc269412b3e4?w=400&h=300&fit=crop',
-        3: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400&h=300&fit=crop',
-        4: 'https://images.unsplash.com/photo-1746211108786-ca20c8f80ecd?w=400&h=300&fit=crop',
-        5: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400&h=300&fit=crop',
+        // 1: Caesar Salad
+        1: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
+        // 2: Tomato Soup
+        2: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&h=300&fit=crop',
+        // 3: Grilled Chicken
+        3: 'https://images.unsplash.com/photo-1592011432621-f7f576f44484?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        // 4: Beef Burger
+        4: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop',
+        // 5: Margherita Pizza
+        5: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400&h=300&fit=crop',
+        // 6: Chocolate Lava Cake
+        6: 'https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=400&h=300&fit=crop',
+        // 7: Lemonade
+        7: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=400&h=300&fit=crop',
+        // 8: Coffee
+        8: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=400&h=300&fit=crop',
     };
 
-    const totalPrice = (item.price * quantity).toFixed(2);
+    const totalPrice = (Number(item.price) * quantity).toFixed(2);
 
     return (
         <div className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
@@ -70,7 +81,7 @@ const ItemModal: React.FC<Props> = ({ item, isOpen, onClose, onAdd }) => {
 
                     {/* Price */}
                     <div className="text-5xl font-black bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent drop-shadow-lg">
-                        ₱{item.price.toFixed(2)}
+                        ₱{Number(item.price).toFixed(2)}
                     </div>
 
                     {/* Quantity Controls */}
