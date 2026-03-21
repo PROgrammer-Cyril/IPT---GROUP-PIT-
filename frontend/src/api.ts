@@ -37,15 +37,28 @@ export const useMenuItems = () => useQuery({
     queryKey: ['menuItems'],
     queryFn: async () => {
         const response = await apiCall(ENDPOINTS.menuItems);
+        
+        // This is the magic fix! It tells React to look inside 'results'
+        if (response && Array.isArray(response.results)) {
+            return response.results;
+        }
+        
+        // Fallback just in case pagination gets turned off later
         return Array.isArray(response) ? response : [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, 
 });
 
 export const useOrders = () => useQuery({
     queryKey: ['orders'],
     queryFn: async () => {
         const response = await apiCall(ENDPOINTS.orders);
+        
+        // Check if Django wrapped it in pagination
+        if (response && Array.isArray(response.results)) {
+            return response.results;
+        }
+        
         return Array.isArray(response) ? response : [];
     },
     refetchInterval: 2000, // Refetch every 2 seconds for real-time updates

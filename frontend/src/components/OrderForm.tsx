@@ -58,7 +58,8 @@ const OrderForm = () => {
     const totalItems = orderItems.reduce((sum, i) => sum + i.quantity, 0);
     const totalPrice = orderItems.reduce((sum: number, item) => {
         const menuItem = menuItems.find((m: any) => m.id === item.menuItemId);
-        return sum + (menuItem?.price || 0) * item.quantity;
+        // ADDED Number()
+        return sum + Number(menuItem?.price || 0) * item.quantity; 
     }, 0);
 
     return (
@@ -84,7 +85,7 @@ const OrderForm = () => {
                         <div className="space-y-3 mb-8 max-h-96 overflow-y-auto">
                             {orderItems.map((item, idx) => {
                                 const menuItem = menuItems.find((m: any) => m.id === item.menuItemId);
-                                const itemTotal = (menuItem?.price || 0) * item.quantity;
+                                const itemTotal = Number(menuItem?.price || 0) * item.quantity;
                                 return (
                                     <div
                                         key={idx}
@@ -95,7 +96,8 @@ const OrderForm = () => {
                                                 {menuItem?.name || `Item ${item.menuItemId}`}
                                             </div>
                                             <div className="text-sm text-gray-400 mt-1">
-                                                ₱{menuItem?.price.toFixed(2)} × {item.quantity}
+                                                {/* ADDED Number() and || 0 fallback */}
+                                                ₱{Number(menuItem?.price || 0).toFixed(2)} × {item.quantity}
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
