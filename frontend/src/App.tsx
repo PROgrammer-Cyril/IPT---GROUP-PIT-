@@ -5,55 +5,68 @@ import OrderQueue from './components/OrderQueue';
 const App = () => {
   return (
     <Router>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid-white/[0.03] opacity-50"></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-blue-500/5 animate-pulse-slow"></div>
-        <div className="max-w-7xl mx-auto">
-          <div className="glass-card p-8 rounded-3xl shadow-2xl border border-white/20">
-            <div className="text-center mb-12">
-              <h1 className="text-7xl md:text-8xl font-black bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-6 drop-shadow-2xl animate-float">
-                🍳 Kitchen Queue
-              </h1>
-              <nav className="flex flex-wrap gap-4 justify-center bg-white/60 backdrop-blur-xl rounded-3xl p-4 shadow-2xl border border-white/40">
-                <NavLink
-                  to="/create-order"
-                  className={({ isActive }) => `
-                    px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-xl
-                    ${isActive
-                      ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-2xl hover:shadow-3xl scale-105'
-                      : 'bg-white/70 hover:bg-white hover:shadow-2xl hover:scale-[1.02] text-gray-800 border border-gray-200/50'
-                    }
-                  `}
-                >
-                  📝 Create Order
-                </NavLink>
-                <NavLink
-                  to="/kitchen-queue"
-                  className={({ isActive }) => `
-                    px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-xl
-                    ${isActive
-                      ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-2xl hover:shadow-3xl scale-105'
-                      : 'bg-white/70 hover:bg-white hover:shadow-2xl hover:scale-[1.02] text-gray-800 border border-gray-200/50'
-                    }
-                  `}
-                >
-                  🔥 Kitchen Queue
-                </NavLink>
-              </nav>
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+        {/* Animated background */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_80%_20%,rgba(34,197,94,0.2),rgba(255,255,255,0))]"></div>
+        </div>
+
+        <div className="relative z-10">
+          <nav className="backdrop-blur-md bg-white/10 border-b border-white/20 sticky top-0 z-40">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-20">
+                <div className="flex-1">
+                  <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    🍳 Kitchen Queue
+                  </h1>
+                </div>
+                <div className="flex gap-2 sm:gap-4">
+                  <NavLink
+                    to="/create-order"
+                    className={({ isActive }) => `
+                      px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base transition-all duration-300
+                      ${isActive
+                        ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/50 scale-100'
+                        : 'bg-white/20 hover:bg-white/30 text-white border border-white/30'
+                      }
+                    `}
+                  >
+                    📝 Create
+                  </NavLink>
+                  <NavLink
+                    to="/kitchen-queue"
+                    className={({ isActive }) => `
+                      px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base transition-all duration-300
+                      ${isActive
+                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/50 scale-100'
+                        : 'bg-white/20 hover:bg-white/30 text-white border border-white/30'
+                      }
+                    `}
+                  >
+                    🔥 Queue
+                  </NavLink>
+                </div>
+              </div>
             </div>
+          </nav>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
             <Routes>
               <Route path="/create-order" element={<OrderForm />} />
               <Route path="/kitchen-queue" element={<OrderQueue />} />
               <Route path="/" element={
-                <div className="text-center py-24">
-                  <div className="text-8xl mb-8">🚀</div>
-                  <h2 className="text-4xl font-bold text-gray-800 mb-4">Welcome to Kitchen Queue</h2>
-                  <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">Use the navigation above to create orders or view the live kitchen queue.</p>
-                  <div className="flex gap-4 justify-center">
-                    <NavLink to="/create-order" className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-2xl font-bold shadow-2xl hover:shadow-3xl transition-all">
-                      📝 Start Creating
+                <div className="text-center py-24 animate-fade-in">
+                  <div className="text-8xl mb-8 animate-float">🚀</div>
+                  <h2 className="text-5xl font-black bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent mb-6">Welcome</h2>
+                  <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
+                    Streamline your kitchen operations with real-time order management and live queue tracking.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <NavLink to="/create-order" className="btn-primary">
+                      📝 Create Order
                     </NavLink>
-                    <NavLink to="/kitchen-queue" className="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-2xl font-bold shadow-2xl hover:shadow-3xl transition-all">
+                    <NavLink to="/kitchen-queue" className="btn-accent">
                       🔥 View Queue
                     </NavLink>
                   </div>

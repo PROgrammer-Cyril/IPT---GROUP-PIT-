@@ -11,10 +11,10 @@ const OrderForm = () => {
     const createOrder = useCreateOrder();
     const { data: menuItems = [] } = useMenuItems();
     const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+    const [tableNumber, setTableNumber] = useState(1);
 
     const handleAddItem = useCallback((menuItemId: number, quantity: number) => {
         console.log('OrderForm add:', { menuItemId, quantity });
-        // Check if item already exists, update qty instead of append
         setOrderItems(prev => {
             const existingIdx = prev.findIndex(i => i.menuItemId === menuItemId);
             if (existingIdx >= 0) {
@@ -29,15 +29,26 @@ const OrderForm = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (orderItems.length === 0) return;
-        createOrder.mutate({ items: orderItems }, {
+        
+        // Convert menuItemId to id for backend
+        const orderData = {
+            table_number: tableNumber,
+            items: orderItems.map(item => ({
+                id: item.menuItemId,
+                quantity: item.quantity
+            }))
+        };
+        
+        createOrder.mutate(orderData, {
             onSuccess: () => {
                 alert('Order created successfully!');
+                setOrderItems([]);
+                setTableNumber(1);
             },
             onError: (error) => {
                 alert('Error creating order: ' + error.message);
             }
         });
-        setOrderItems([]);
     };
 
     const removeItem = (index: number) => {
@@ -45,46 +56,91 @@ const OrderForm = () => {
     };
 
     const totalItems = orderItems.reduce((sum, i) => sum + i.quantity, 0);
+    const totalPrice = orderItems.reduce((sum: number, item) => {
+        const menuItem = menuItems.find((m: any) => m.id === item.menuItemId);
+        return sum + (menuItem?.price || 0) * item.quantity;
+    }, 0);
 
-    return React.createElement('form', { onSubmit: handleSubmit, className: "glass-card p-12 rounded-3xl shadow-2xl border border-white/20 w-full max-w-6xl mx-auto min-h-screen" },
-        React.createElement('h2', { className: "text-2xl font-bold mb-8 text-center bg-gradient-to-r from-gray-800 via-gray-700 to-gray-900 bg-clip-text text-transparent" },
-            "Create New Order"
-        ),
-        React.createElement(MenuGrid, { onAddItem: handleAddItem }),
-        orderItems.length > 0 && React.createElement(React.Fragment, null,
-            React.createElement('div', { className: "mt-8" },
-                React.createElement('h3', { className: "text-lg font-bold mb-4 text-gray-800" }, `Order Items (${orderItems.length})`),
-                React.createElement('div', { className: "space-y-3 mb-8" },
-                    orderItems.map((item, idx) =>
-                        React.createElement('div', { key: idx, className: "flex justify-between items-center p-4 bg-white/40 backdrop-blur-sm rounded-xl border border-gray-200/30" },
-                            React.createElement('div', null, [
-                                React.createElement('div', { className: "font-medium text-gray-900" },
-                                    `${menuItems.find((m: any) => m.id === item.menuItemId)?.name || 'Item ' + item.menuItemId} (x${item.quantity})`
-                                ),
-                                React.createElement('div', { className: "text-emerald-600 font-bold" },
-                                    '₱' + (menuItems.find((m: any) => m.id === item.menuItemId)?.price * item.quantity || 0).toFixed(2)
-                                )
-                            ]),
-                            React.createElement('button', {
-                                type: "button",
-                                onClick: () => removeItem(idx),
-                                className: "text-red-500 hover:text-red-600 font-medium text-sm"
-                            }, "Remove")
-                        )
-                    )
-                )
-            ),
-            React.createElement('button', {
-                type: "submit",
-                disabled: createOrder.isPending || orderItems.length === 0,
-                className: "w-full py-4 px-8 rounded-2xl font-bold text-lg bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
-            },
-                `Create Order (${totalItems} items - ₱${orderItems.reduce((sum: number, item) => {
-                    const menuItem = menuItems.find((m: any) => m.id === item.menuItemId);
-                    return sum + (menuItem?.price || 0) * item.quantity;
-                }, 0).toFixed(2)})`
-            )
-        )
+    return (
+        <form onSubmit={handleSubmit} className="w-full max-w-6xl mx-auto animate-slide-up">
+            <div className="mb-12">
+                <h2 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent mb-8">
+                    📝 Create New Order
+                </h2>
+            </div>
+
+            <MenuGrid onAddItem={handleAddItem} />
+
+            {orderItems.length > 0 && (
+                <div className="mt-16 animate-slide-up">
+                    <div className="glass-card p-8 rounded-2xl mb-8">
+                        <div className="flex items-center gap-3 mb-6">
+                            <h3 className="text-2xl font-bold text-white">Order Summary</h3>
+                            <span className="badge bg-emerald-500/20 text-emerald-200 border-emerald-400/50">
+                                {orderItems.length} item{orderItems.length !== 1 ? 's' : ''}
+                            </span>
+                        </div>
+
+                        <div className="space-y-3 mb-8 max-h-96 overflow-y-auto">
+                            {orderItems.map((item, idx) => {
+                                const menuItem = menuItems.find((m: any) => m.id === item.menuItemId);
+                                const itemTotal = (menuItem?.price || 0) * item.quantity;
+                                return (
+                                    <div
+                                        key={idx}
+                                        className="flex justify-between items-center p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/10 transition-all duration-200 group"
+                                    >
+                                        <div className="flex-1">
+                                            <div className="font-bold text-white text-lg">
+                                                {menuItem?.name || `Item ${item.menuItemId}`}
+                                            </div>
+                                            <div className="text-sm text-gray-400 mt-1">
+                                                ₱{menuItem?.price.toFixed(2)} × {item.quantity}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-xl font-black text-emerald-400">
+                                                ₱{itemTotal.toFixed(2)}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeItem(idx)}
+                                                className="px-4 py-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/40 transition-all duration-200 font-medium text-sm border border-red-400/30"
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="border-t border-white/20 pt-6 flex justify-between items-center">
+                            <div>
+                                <div className="text-gray-400 text-sm mb-2">Total Amount</div>
+                                <div className="text-4xl font-black bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
+                                    ₱{totalPrice.toFixed(2)}
+                                </div>
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={createOrder.isPending || orderItems.length === 0}
+                                className="btn-primary px-8 py-4 text-lg disabled:opacity-50"
+                            >
+                                {createOrder.isPending ? 'Creating...' : `Create Order (${totalItems} items)`}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {orderItems.length === 0 && (
+                <div className="text-center py-20 text-gray-400">
+                    <div className="text-6xl mb-4">🛒</div>
+                    <p className="text-lg">Select items from the menu above to create an order</p>
+                </div>
+            )}
+        </form>
     );
 };
 

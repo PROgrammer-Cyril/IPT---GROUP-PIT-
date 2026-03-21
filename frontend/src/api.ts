@@ -4,88 +4,57 @@ import { MenuItem, Order, OrderStatus, CreateOrderRequest } from './types';
 const API_BASE = 'http://localhost:8000/api';
 
 const ENDPOINTS = {
-    menuItems: `${API_BASE}/menu-items/`,
+    menuItems: `${API_BASE}/menu/`,
     orders: `${API_BASE}/orders/`,
 };
 
-// Mock data
-const mockMenuItems: MenuItem[] = [
-    { id: 1, name: 'Classic Burger', price: 249 },
-    { id: 2, name: 'French Fries', price: 169 },
-    { id: 3, name: 'Margherita Pizza', price: 819 },
-    { id: 4, name: 'Caesar Salad', price: 199 },
-    { id: 5, name: 'Coke', price: 50 },
-];
+// Real API calls to Django backend
+const apiCall = async (url: string, options: RequestInit = {}): Promise<any> => {
+    const response = await fetch(url, {
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+        },
+    });
 
-let mockOrderId = 200;
-const mockOrders: Order[] = [];
-
-const TEN_MINS = 10 * 60 * 1000;
-
-// Filter old completed orders
-const getFilteredOrders = (): Order[] => mockOrders.filter(order => {
-    if (order.status !== 'completed') return true;
-    const completedAt = order.completedAt ? new Date(order.completedAt).getTime() : 0;
-    return Date.now() - completedAt < TEN_MINS;
-});
-
-// Mock API with auto-delete
-const mockApi = async (endpoint: string, options: RequestInit): Promise<any> => {
-    await new Promise(r => setTimeout(r, 500));
-
-    // Apply filter for all GET
-    const filteredOrders = getFilteredOrders();
-
-    if (endpoint.includes('menu-items')) {
-        return mockMenuItems;
+    if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
-    if (endpoint.includes('orders')) {
-        if (options.method === 'GET') {
-            return filteredOrders;
-        }
-        if (options.method === 'POST') {
-            const data = JSON.parse(options.body as string) as CreateOrderRequest;
-            const newOrder: Order = {
-                id: mockOrderId++,
-                items: data.items,
-                status: 'pending' as OrderStatus,
-                createdAt: new Date().toISOString(),
-            };
-            mockOrders.unshift(newOrder);
-            return newOrder;
-        }
-        if (options.method === 'PATCH') {
-            const id = parseInt(endpoint.split('/').filter(Boolean).pop() || '0');
-            const data = JSON.parse(options.body as string);
-            const order = mockOrders.find(o => o.id === id);
-            if (order) {
-                order.status = data.status as OrderStatus;
-                if (data.status === 'completed') {
-                    order.completedAt = new Date().toISOString();
-                }
-            }
-            return { success: true };
-        }
+
+    // Handle empty responses
+    const contentLength = response.headers.get('content-length');
+    if (contentLength === '0' || response.status === 204) {
+        return null;
     }
-    throw new Error('Endpoint not found');
+
+    const text = await response.text();
+    return text ? JSON.parse(text) : null;
 };
 
-// RTQ hooks
+// React Query hooks
 export const useMenuItems = () => useQuery({
     queryKey: ['menuItems'],
-    queryFn: () => mockApi(ENDPOINTS.menuItems, { method: 'GET' }),
+    queryFn: async () => {
+        const response = await apiCall(ENDPOINTS.menuItems);
+        return Array.isArray(response) ? response : [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
 });
 
 export const useOrders = () => useQuery({
     queryKey: ['orders'],
-    queryFn: () => mockApi(ENDPOINTS.orders, { method: 'GET' }),
-    refetchInterval: 2000,
+    queryFn: async () => {
+        const response = await apiCall(ENDPOINTS.orders);
+        return Array.isArray(response) ? response : [];
+    },
+    refetchInterval: 2000, // Refetch every 2 seconds for real-time updates
 });
 
 export const useCreateOrder = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (data: CreateOrderRequest) => mockApi(ENDPOINTS.orders, {
+        mutationFn: (data: CreateOrderRequest) => apiCall(ENDPOINTS.orders, {
             method: 'POST',
             body: JSON.stringify(data),
         }),
@@ -98,7 +67,7 @@ export const useCreateOrder = () => {
 export const useUpdateStatus = (orderId: number) => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (status: OrderStatus) => mockApi(`${ENDPOINTS.orders}${orderId}/`, {
+        mutationFn: (status: OrderStatus) => apiCall(`${ENDPOINTS.orders}${orderId}/`, {
             method: 'PATCH',
             body: JSON.stringify({ status }),
         }),

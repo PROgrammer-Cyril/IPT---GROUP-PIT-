@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
@@ -13,8 +13,39 @@ class MenuItemViewSet(viewsets.ModelViewSet):
 
 
 class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.all().order_by('created_at')
+    queryset = Order.objects.all().order_by('-created_at')
     serializer_class = OrderSerializer
+
+    def create(self, request, *args, **kwargs):
+        """Create order with items. Expects: { "table_number": 1, "items": [{"id": 1, "quantity": 2}], "notes": "" }"""
+        items_data = request.data.pop('items', [])
+        table_number = request.data.get('table_number', 1)
+        
+        # Create the order
+        order = Order.objects.create(
+            table_number=table_number,
+            notes=request.data.get('notes', ''),
+        )
+        
+        # Create order items
+        for item_data in items_data:
+            try:
+                menu_item = MenuItem.objects.get(id=item_data['id'])
+                OrderItem.objects.create(
+                    order=order,
+                    menu_item=menu_item,
+                    quantity=item_data.get('quantity', 1),
+                    special_instructions=item_data.get('instructions', ''),
+                )
+            except MenuItem.DoesNotExist:
+                order.delete()
+                return Response(
+                    {'error': f'MenuItem with id {item_data["id"]} not found'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        serializer = self.get_serializer(order)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'], url_path='queue')
     def queue(self, request):
